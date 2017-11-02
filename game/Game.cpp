@@ -9,23 +9,26 @@
 
 using namespace std;
 
+
+
 Game::Game() {
 
-    for(int i = 0; i < 3; i++) {
-        for(int j = 0; j < 3; j++) {
-            gameBoard[i][j] = '-';
-        }
+    for(int i = 0; i < 9; i++) {
+        gameBoard[i] = '-';
     }
 
 }
 
 void Game::printBoard() {
-    cout << "-------------------";
-    for(int i = 0; i < 3; i++) {
-        cout << '\n' << "|";
-        for(int j = 0; j < 3; j++) {
-            cout << setw(3) << gameBoard[i][j] << setw(3) << " |";
+    cout << "-------------------"<< '\n';
+    for(int i = 0; i < 9; i++) {
+        cout  << "|";
+        char result = gameBoard[i];
+        cout << setw(3) << gameBoard[i] << setw(3) << " |";
+        if(i==2 || i==5) {
+            cout << '\n';
         }
+
     }
     cout << '\n' << "-------------------" << '\n';
 
@@ -44,8 +47,10 @@ void Game::play() {
             printBoard();
         } else {
             cout << endl << "Computer Player Move:" << endl;
-            Move AImove = minimax(gameBoard);
-            gameBoard[AImove.x][AImove.y] = ai;
+            minimax(true);
+            //Move AImove1 = evaluateMove(AImove);
+            int test = AInextMove;
+            gameBoard[AInextMove] = ai;
             if(checkWin(AI)) cout << "Computer Player Wins" << endl;
             turn++;
             printBoard();
@@ -55,89 +60,84 @@ void Game::play() {
 }
 
 void Game::getHumanMove() {
-    int x, y = -1; // arbitrary assignment to init loop
-    while(x < 0 || x > 2 || y < 0 || y > 2) {
-        // Loop until a valid move is entered
-        cout << "Enter your move in coordinate form, ex: (1,3)." << endl;
-        cout << "Your Move: ";
-        char c;
-        string restofline;
-        cin >> c >> c;
-        x = c - '0' - 1;
-        cin >> c >> c;
-        y = c - '0' - 1;
-        getline(cin, restofline); // get garbage chars after move
-    }
-    gameBoard[x][y] = human;
+    cout << "enter move : ";
+    int c;
+    cin >> c;
+    string restofline;
+    getline(cin, restofline); // get garbage chars after move
+    gameBoard[c-1] = human;
 
 }
 
-int Game::maxSearch(char AIboard[3][3]) {
-    if(gameOver()) return score();
-    Move bestMove;
 
-    int bestMoveScore = -1000;
-    for(int i = 0; i < 3; i++) {
-        for(int j = 0; j < 3; j++) {
-            if(AIboard[i][j] == '-') {
-                AIboard[i][j] = human;
-                int tempMoveScore = minSearch(AIboard);
-                if(tempMoveScore >= bestMoveScore) {
-                    bestMoveScore = tempMoveScore;
-                    bestMove.x = i;
-                    bestMove.y = j;
+int Game::minimax(bool minimizingForPlayer)// The minimax function
+{
+    //initial values min and max
+    int max_val=-1000,min_val=1000;
+    int i,j,value = 1;
+    //base cases
+    if(checkWin(AI))
+    {return 10;}
+    else if(checkWin(HUMAN))
+    {return -10;}
+    else if(gameOver())
+    {return 0;}
+    //end base cases
+
+    //Score of the move
+    int score[9] = {1,1,1,1,1,1,1,1,1};
+
+    //check all possible moves
+    for(i=0;i<9;i++)
+    {
+        if(gameBoard[i] == '-')
+        {
+            if(min_val>max_val) // pruning (reversed) no need to go deeper
+            {
+                if(minimizingForPlayer == true)
+                {
+                    gameBoard[i] = ai;
+                    //Maximize for CPU
+                    value = minimax(false);
                 }
-                AIboard[i][j] = '-';
+                else
+                {
+                    gameBoard[i] = human;
+                    //Minimize for player
+                    value = minimax(true);
+                }
+                gameBoard[i] = '-';
+                score[i] = value;
             }
         }
     }
 
-    return bestMoveScore;
-}
-
-int Game::minSearch(char AIboard[3][3]) {
-    if(gameOver()) return score();
-    Move bestMove;
-
-    int bestMoveScore = 1000;
-    for(int i = 0; i < 3; i++) {
-        for(int j = 0; j < 3; j++) {
-            if(AIboard[i][j] == '-') {
-                AIboard[i][j] = ai;
-                int tempMove = maxSearch(AIboard);
-                if(tempMove <= bestMoveScore) {
-                    bestMoveScore = tempMove;
-                    bestMove.x = i;
-                    bestMove.y = j;
-                }
-                AIboard[i][j] = '-';
+    if(minimizingForPlayer == true)
+    {
+        max_val = -1000;
+        for(j=0;j<9;j++)
+        {
+            if(score[j] > max_val && score[j] != 1)
+            {
+                max_val = score[j];
+                AInextMove = j;
             }
         }
+        return max_val;
     }
-
-    return bestMoveScore;
-}
-
-Move Game::minimax(char AIboard[3][3]) {
-    int bestMoveScore = 100; // -100 is arbitrary
-    Move bestMove;
-
-    for(int i = 0; i < 3; i++) {
-        for(int j = 0; j < 3; j++) {
-            if(AIboard[i][j] == '-') {
-                AIboard[i][j] = ai;
-                int tempMoveScore = maxSearch(AIboard);
-                if(tempMoveScore <= bestMoveScore) {
-                    bestMoveScore = tempMoveScore;
-                    bestMove.x = i;
-                    bestMove.y = j;
-                }
-                AIboard[i][j] = '-';
+    if(minimizingForPlayer == false)
+    {
+        min_val = 1000;
+        for(j=0;j<9;j++)
+        {
+            if(score[j] < min_val && score[j] != 1)
+            {
+                min_val = score[j];
+                AInextMove = j;
             }
         }
+        return min_val;
     }
-
-    return bestMove;
 }
 
 int Game::score() {
@@ -147,42 +147,45 @@ int Game::score() {
 }
 
 bool Game::checkWin(Player player) {
+
     char playerChar;
-    if(player == HUMAN) playerChar = human;
-    else playerChar = ai;
-
-    for(int i = 0; i < 3; i++) {
-        // Check horizontals
-        if(gameBoard[i][0] == playerChar && gameBoard[i][1] == playerChar
-           && gameBoard[i][2] == playerChar)
-            return true;
-
-        // Check verticals
-        if(gameBoard[0][i] == playerChar && gameBoard[1][i] == playerChar
-           && gameBoard[2][i] == playerChar)
-            return true;
+    if(player == HUMAN) {
+        playerChar = human;
+    } else{
+        playerChar = ai;
     }
 
-    // Check diagonals
-    if (gameBoard[0][0] == playerChar && gameBoard[1][1] == playerChar
-        && gameBoard[2][2] == playerChar) {
-        return true;
-    } else if (gameBoard[0][2] == playerChar && gameBoard[1][1] == playerChar
-               && gameBoard[2][0] == playerChar) {
+    for(int i=0;i<9;i+=3)
+    {
+        if((gameBoard[i]==gameBoard[i+1])&&(gameBoard[i+1]==gameBoard[i+2])&&(gameBoard[i]==playerChar))
+            return true;
+    }
+    for(int i=0;i<3;i++)
+    {
+        if((gameBoard[i]==gameBoard[i+3])&&(gameBoard[i+3]==gameBoard[i+6])&&(gameBoard[i]==playerChar))
+            return true;
+    }
+    if((gameBoard[0]==gameBoard[4])&&(gameBoard[4]==gameBoard[8])&&(gameBoard[0]==playerChar))
+    {
         return true;
     }
-
+    if((gameBoard[2]==gameBoard[4])&&(gameBoard[4]==gameBoard[6])&&(gameBoard[2]==playerChar))
+    {
+        return true;
+    }
     return false;
 }
 
 bool Game::gameOver() {
-    if(checkWin(HUMAN)) return true;
-    else if(checkWin(AI)) return true;
-
-    bool emptySpace = false;
-    for(int i = 0; i < 3; i++) {
-        if(gameBoard[i][0] == '-' || gameBoard[i][1] == '-' || gameBoard[i][2] == '-')
-            emptySpace = true;
+    for(int i =0;i<9;i++)
+    {
+        if(gameBoard[i]!=ai)
+        {
+            if(gameBoard[i]!=human)
+            {
+                return false;
+            }
+        }
     }
-    return !emptySpace;
+    return true;
 }

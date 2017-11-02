@@ -7,6 +7,9 @@
 
 const char human = 'X';
 const char ai = 'O';
+const int MAX = 1000;
+const int MIN = -1000;
+
 
 enum Player { HUMAN, AI };
 
@@ -19,7 +22,9 @@ class Game {
 
 
 private:
-    char gameBoard[3][3];
+    char gameBoard[9];
+
+    int AInextMove;
 
     void printBoard();
 
@@ -31,11 +36,8 @@ private:
 
     int score();
 
-    Move minimax(char AIBoard[3][3]);
+    int minimax(bool minimizingForPlayer);
 
-    int minSearch(char AIBoard[3][3]);
-
-    int maxSearch(char AIBoard[3][3]);
 
 public:
     //constructor
