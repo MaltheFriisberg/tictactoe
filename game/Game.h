@@ -42,7 +42,7 @@ private:
 public:
     //constructor
     Game();
-
+    //game driver
     void play();
 
 };
